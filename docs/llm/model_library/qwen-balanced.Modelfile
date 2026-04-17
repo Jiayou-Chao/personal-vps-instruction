@@ -1,0 +1,30 @@
+FROM hf.co/LEONW24/Qwen3.5-9B-Uncensored:Q4_K_M
+
+# Official Chat Template from Webpage
+TEMPLATE """{{- if .System }}{{ .System }}{{ end }}
+{{- range .Messages }}
+<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+"""
+
+# Context & Memory
+# 保持你要求的 128K 上下文用于写作
+PARAMETER num_ctx 131072
+
+# Repetition Fixes (修复重复循环的关键参数)
+PARAMETER repeat_penalty 1.18
+PARAMETER repeat_last_n 128
+
+# Sampling (根据网页推荐更新 top_p，同时保留 min_p 增加稳定性)
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER top_k 20
+PARAMETER min_p 0.05
+
+# Stop Tokens
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+
+SYSTEM "You are a helpful assistant."
