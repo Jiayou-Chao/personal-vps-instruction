@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    container_name: joplin_db
+    user: "1001:1001"
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ../../data/joplin_server/joplin-data:/var/lib/postgresql/data
+
+  app:
+    image: joplin/server:latest
+    container_name: joplin_app
+    user: "1001:1001"
+    depends_on:
+      - db
+    ports:
+      - "22790:22790"
+    restart: unless-stopped
+    environment:
+      - APP_PORT=${APP_PORT}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - JOPLIN_IS_REVERSE_PROXY=${JOPLIN_IS_REVERSE_PROXY}
+      - DB_CLIENT=pg
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DATABASE=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES}
+    volumes:
+      - ../../data/joplin_server/joplin_logs:/home/joplin/packages/server/logs
+      - ../../data/joplin_server/joplin_temp:/home/joplin/packages/server/temp
