@@ -22,7 +22,7 @@ RESTIC_COMPRESSION=max
 mkdir -p "$CACHE_DIR"
 
 echo "--- Syncing $REPO_NAME to local cache ---"
-rclone sync "$SOURCE_REMOTE" "$CACHE_DIR/$REPO_NAME" -P
+rclone sync "$SOURCE_REMOTE" "$CACHE_DIR/$REPO_NAME" -P --fast-list  --fast-list --transfers 8 --checkers 8 --tpslimit 10
 
 # Enter the repo directory so the snapshot path is just "."
 cd "$CACHE_DIR/$REPO_NAME" || exit 1
@@ -38,7 +38,7 @@ if restic backup . --tag archived --tag "$REPO_NAME" --host "archived-repo"; the
     rclone size "ods:Backup/repos/restic-$REPO_NAME"
     
     echo "--- Running Integrity Check ---"
-    if restic check --read-data-subset=1%; then
+    if restic check --read-data-subset=5%; then
         echo "--- Check Passed. Purging Source ---"
         # Purge local cache (we are inside it, so we need to be careful)
         cd "$CACHE_DIR" || exit 1
