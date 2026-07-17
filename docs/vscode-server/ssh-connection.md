@@ -21,7 +21,23 @@ ssh nvwulf
 
 ### 保持链接
 
+为了保证 SSH 连接的稳定性和自动重连，推荐使用 `autossh` 配合本地 SSH Keepalive 配置，并与 `tmux` 结合使用。
+
+#### 1. 配置 SSH 保持存活
+在本地 `~/.ssh/config` 中，为 `nvwulf` 主机添加心跳配置：
+```text
+Host nvwulf
+    HostName login.nvwulf.stonybrook.edu
+    User jichao
+    ServerAliveInterval 60
+    ServerAliveCountMax 10
 ```
+* `ServerAliveInterval 60`: 每 60 秒发送一次心跳包。
+* `ServerAliveCountMax 10`: 连续 10 次心跳无响应才断开连接，从而触发 `autossh` 自动重连。
+
+#### 2. 使用 Autossh 脚本保持连接
+通过 `autossh` 替代原生的 `ssh`，当连接断开时它会自动重新连接：
+```bash
 #!/bin/bash
 
 # 1. 清理掉旧的 stale 会话
@@ -30,12 +46,15 @@ tmux kill-session -t nvwulf-ssh 2>/dev/null
 # 2. 新建一个后台运行的 tmux 会话
 tmux new-session -s nvwulf-ssh -d
 
-# 3. 向该会话发送命令：切换到家目录，设置环境变量，创建临时目录
-tmux send-keys -t nvwulf-ssh "ssh nvwulf" C-m
+# 3. 使用 autossh 建立连接（-M 0 表示使用 ssh 本身的心跳机制）
+tmux send-keys -t nvwulf-ssh "autossh -M 0 nvwulf" C-m
 
 # 4. 将当前终端接入到该 tmux 会话中
 tmux attach-session -t nvwulf-ssh
 ```
+
+#### 3. 进阶：会话自动保存与恢复
+若希望在服务器/VPS 重启后，能自动恢复 tmux 窗口、布局及运行中的 `autossh` 进程，请参考详细指南：[Tmux & SSH Keepalive 指南](file:///home/ubuntu/projects/vps/docs/vscode-server/tmux-ssh-keepalive.md)。
 
 
 
